@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>فضاء التقنية - دليل الأسعار</title>
+    <title>شركة فضاء التقنية - دليل الأسعار</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -14,22 +14,51 @@
         }
         .container {
             max-width: 600px;
-            margin: 50px auto;
+            margin: 30px auto;
             background: white;
             padding: 30px;
-            border-radius: 10px;
+            border-radius: 15px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        /* تنسيق الشعار */
+        .logo-container {
+            margin-bottom: 15px;
+        }
+        .logo-img {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            border: 3px solid #007bff;
         }
         h1 {
             color: #333;
             font-size: 24px;
-            margin-bottom: 5px;
+            margin: 10px 0 5px 0;
         }
         .subtitle {
             color: #666;
             font-size: 18px;
             margin-top: 0;
-            margin-bottom: 25px;
+            margin-bottom: 15px;
+        }
+        /* تنسيق الوقت والتاريخ والتحديث */
+        .meta-info {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #555;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            border-right: 4px solid #007bff;
+        }
+        .update-time {
+            color: #27ae60;
+            font-weight: bold;
         }
         .search-box {
             width: 100%;
@@ -84,42 +113,78 @@
 <body>
 
     <div class="container">
-        <h1>🏪 فضاء التقنية</h1>
-        <div class="subtitle">دليل الأسعار</div>
+        <!-- قسم الشعار -->
+        <div class="logo-container">
+            <!-- استبدل logo.jpg باسم ملف الصورة الفعلي لديك في المجلد -->
+            <img src="logo.jpg" alt="شعار شركة فضاء التقنية" class="logo-img">
+        </div>
+
+        <h1>شركة فضاء التقنية</h1>
+        <div class="subtitle">دليل الأسعار الإلكتروني</div>
         
+        <!-- قسم الوقت والتاريخ وآخر تحديث -->
+        <div class="meta-info">
+            <div id="liveClock">📅 التاريخ: --/--/---- | ⏰ الوقت: --:--:--</div>
+            <div id="lastUpdateTime" class="update-time">🔄 جاري التحقق من آخر تحديث للأسعار...</div>
+        </div>
+
         <input type="text" id="searchInput" class="search-box" placeholder="🔍 ابحث باسم الصنف أو الكود...">
         
-        <div id="statusMessage" class="status">🚧 جاري تحميل البيانات...</div>
+        <div id="statusMessage" class="status">🚧 جاري تحميل البيانات من النظام...</div>
         <div id="resultsContainer"></div>
     </div>
 
     <script>
-        // رابط الجوجل شيت الخاص بك بصيغة CSV لسهولة القراءة
-        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyserO0DyS9TLMj3o_P8OBmXxPb9Y1H1whKiNAHNOh3vUopyWYeOKPYJ82O1NX_9pZ9MlE5c0PnZUW/pub?output=csv';
+        const SHEET_ID = 'e/2PACX-1vRyserO0DyS9TLMj3o_P8OBmXxPb9Y1H1whKiNAHNOh3vUopyWYeOKPYJ82O1NX_9pZ9MlE5c0PnZUW';
+        const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/pub?output=csv`;
         
         let products = [];
 
-        // جلب البيانات من الشيت
+        // 1. دالة الساعة الحية والتاريخ
+        function updateClock() {
+            const now = new Date();
+            const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
+            const dateStr = now.toLocaleDateString('ar-LY', options);
+            const timeStr = now.toLocaleTimeString('ar-LY', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            
+            document.getElementById('liveClock').innerHTML = `📅 التاريخ: ${dateStr} | ⏰ الوقت: ${timeStr}`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // 2. دالة جلب البيانات ومعرفة وقت التحديث تلقائياً
         async function loadPrices() {
             try {
+                // جلب ملف الأسعار
                 const response = await fetch(SHEET_URL);
                 const data = await response.text();
                 products = parseCSV(data);
                 
-                // إخفاء رسالة التحميل بمجرد الجاهزية
                 document.getElementById('statusMessage').style.display = 'none';
+
+                // جلب وقت آخر تعديل للملف من السيرفر وعرضه
+                const lastModified = response.headers.get('Last-Modified');
+                if (lastModified) {
+                    const updateDate = new Date(lastModified);
+                    const formattedUpdate = updateDate.toLocaleString('ar-LY', {
+                        year: 'numeric', month: '2-digit', day: '2-digit',
+                        hour: '2-digit', minute: '2-digit'
+                    });
+                    document.getElementById('lastUpdateTime').innerHTML = `⏱️ آخر تحديث للأسعار: ${formattedUpdate}`;
+                } else {
+                    document.getElementById('lastUpdateTime').innerHTML = `⏱️ تم تحديث الأسعار فوراً عند فتح الصفحة`;
+                }
+
             } catch (error) {
                 console.error("خطأ في الاتصال:", error);
-                document.getElementById('statusMessage').innerText = "❌ حدث خطأ أثناء تحميل الأسعار. تأكد من اتصال الإنترنت.";
+                document.getElementById('statusMessage').innerText = "❌ حدث خطأ أثناء تحميل الأسعار.";
+                document.getElementById('lastUpdateTime').innerHTML = `⚠️ تعذر معرفة وقت التحديث`;
             }
         }
 
-        // تحويل النص القادم من جوجل شيت إلى مصفوفة مرتبة
         function parseCSV(csvText) {
             const lines = csvText.split('\n');
             if (lines.length === 0) return [];
-            
-            // قراءة العناوين من الصف الأول وتجهيزها
             const headers = lines[0].replace(/"/g, '').split(',').map(h => h.trim().toLowerCase());
             
             return lines.slice(1).map(line => {
@@ -133,19 +198,17 @@
             }).filter(item => item !== null);
         }
 
-        // مراقبة عملية البحث عند الكتابة
+        // محرك البحث
         const searchInput = document.getElementById('searchInput');
         const resultsContainer = document.getElementById('resultsContainer');
 
         searchInput.addEventListener('input', (e) => {
             const query = e.target.value.toLowerCase().trim();
-            
             if (query === '') {
                 resultsContainer.innerHTML = '';
                 return;
             }
 
-            // تصفية المنتجات بناءً على الكود (id) أو الاسم (name)
             const filtered = products.filter(product => {
                 const nameMatch = product.name && product.name.toLowerCase().includes(query);
                 const idMatch = product.id && product.id.toString().includes(query);
@@ -155,7 +218,6 @@
             displayResults(filtered);
         });
 
-        // عرض جدول النتائج
         function displayResults(results) {
             if (results.length === 0) {
                 resultsContainer.innerHTML = '<p class="no-result">عذراً، الصنف غير موجود</p>';
@@ -183,7 +245,6 @@
             resultsContainer.innerHTML = html;
         }
 
-        // تشغيل النظام فوراً عند فتح الصفحة
         loadPrices();
     </script>
 </body>
